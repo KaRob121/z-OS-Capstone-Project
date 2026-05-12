@@ -1,6 +1,6 @@
 # z/OS Training
 
-## [Capstone Projects](Capstone_Projects.md)
+## Capstone Projects
 
 ### 1. Mass-Mailing Solution
 
@@ -91,7 +91,7 @@ Table Name: **CONTACTS**
 
 The first batch job will comprise several steps to read data feeds in different formats, reformat them into a common format, normalize the names, sort the records and merge the files before updating the system of record with new and modified contact information. The number of job steps will depend on how you choose to design the solution.
 
-![Fig. 1: Ingest data feeds (overview)](pictures/Mailout_Fig_1.png)
+![Fig. 1: Ingest data feeds (overview)](Pictures/Mailout_Fig_1.png)
 
 The first few steps of the job must read the three data feeds and sort them.
 
