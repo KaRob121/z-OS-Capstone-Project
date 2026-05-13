@@ -1,7 +1,7 @@
        Identification Division.
        Program-Id. CAPUPD.
       *****************************************************************
-      * Update a Free Throw record
+      * Program for viewing, adding, deleting or updating records
       *****************************************************************
        Data Division.
        Working-Storage Section.
@@ -41,6 +41,10 @@
                10 CP-DO-NOT-CONTACT       PIC X(1).
                10 CP-DO-NOT-CONTACT-IND   PIC S9(4) USAGE COMP.
            02  Validation-Errors               pic x(79).
+           02  Action-Key                      pic x.
+               88  Add-Key                     value 'A'.
+               88  Update-Key                  value 'C'.
+               88  Delete-Key                  value 'D'.
        01  CICS-Response-Code                  pic s9(9) binary.
        01  Display-Messages.
            05  Highlight-Control               pic x.
@@ -51,8 +55,12 @@
            05  MSG-Initial-Prompt.
                10  filler                      pic x(79)
                value "Overtype values to be changed".
+           05  MSG-Record-Added                pic x(79)
+               value "Record successfully added".
            05  MSG-Record-Updated              pic x(79)
                value "Record successfully updated".
+           05  MSG-Record-Deleted              pic x(79)
+               value "Record successfully deleted".
            05  MSG-Container-Error.
                10  filler                      pic x(14)
                value 'GET CONTAINER('.
@@ -89,7 +97,7 @@
            .
        0000-First-Time.
       *****************************************************************
-      * First entry into this program in a conversation.
+      * Initiate the map and move appropriate values to display
       *****************************************************************
            move spaces to CON-First-Time
            move spaces to CAPUMAPO
@@ -101,7 +109,7 @@
            .
        1000-Process-User-Input.
       *****************************************************************
-      * Route control to the appropriate paragraph based on transid.
+      * Check which keys the user pressed and route accordingly
       *****************************************************************
            perform 1100-Receive-Map
            perform 1200-Check-Attention-Id-Keys
@@ -125,9 +133,18 @@
       *****************************************************************
            evaluate EIBAID
                when DFHENTER
-                   perform 2000-Validate-Input
+                   if not Delete-Key
+                       perform 2000-Validate-Input
+                   end-if
                when DFHPF5
-                   perform 5000-Save-Changes
+                   evaluate true
+                       when Add-Key
+                           perform 5100-Add-Changes
+                       when Update-Key
+                           perform 5000-Save-Changes
+                       when other
+                           perform 5200-Delete-Changes
+                   end-evaluate
                when DFHPF12
                    perform 9500-Transfer-to-View
                when other
@@ -137,6 +154,9 @@
            end-evaluate
            .
        1300-Set-Map.
+      *****************************************************************
+      * Set the correct titles for feilds depending on language
+      *****************************************************************
            if CP-LANG = "EN"
                move "     Contact Details" to CDEETO
                move "      First Name: " to FNAMETO
@@ -240,6 +260,9 @@
            move WS-DATE-NUMERIC to LRESPO
            .
        4100-Set-Host-Variables.
+      *****************************************************************
+      * Format the variables to be passed to a sql statement
+      *****************************************************************
            compute CP-FIRST-NAME-LEN =
                function length(function trim(CP-FIRST-NAME-TEXT))
            end-compute
@@ -283,7 +306,7 @@
            .
        5000-Save-Changes.
       *****************************************************************
-      * Add the record unless there are still validation errors.
+      * Update the record unless there are still validation errors.
       *****************************************************************
            perform 4000-Copy-from-Record-to-Map
            if Validation-Errors greater than spaces
@@ -308,6 +331,59 @@
                else
                    EXEC SQL ROLLBACK END-EXEC
                    move "REWRITE" to ERR-Operation
+                   perform 8200-SQL-Error
+               end-if
+           end-if
+           .
+       5100-Add-Changes.
+      *****************************************************************
+      * Add the record unless there are still validation errors.
+      *****************************************************************
+           perform 4000-Copy-from-Record-to-Map
+           if Validation-Errors greater than spaces
+               move Validation-Errors to MSGO
+           else
+               EXEC SQL
+               INSERT INTO CONTACTS (
+                 LANG, SURNAME, FIRST_NAME, MIDDLE_NAME, ADDL_NAME,
+                 EMAIL_ADDR, LAST_CONTACT, LAST_RESPONSE, DO_NOT_CONTACT
+               )
+               VALUES (
+                 :CP-LANG, :CP-SURNAME, :CP-FIRST-NAME,
+                 :CP-MIDDLE-NAME :CP-MIDDLE-NAME-IND,
+                 :CP-ADDL-NAME :CP-ADDL-NAME-IND,
+                 :CP-EMAIL-ADDR, :CP-LAST-CONTACT :CP-LAST-CONTACT-IND,
+                 :CP-LAST-RESPONSE :CP-LAST-RESPONSE-IND,
+                 :CP-DO-NOT-CONTACT :CP-DO-NOT-CONTACT-IND)
+               END-EXEC
+               if SQLCODE = 0
+                   EXEC SQL COMMIT END-EXEC
+                   move MSG-Record-Added to MSGO
+               else
+                   EXEC SQL ROLLBACK END-EXEC
+                   move "ADD" to ERR-Operation
+                   perform 8200-SQL-Error
+               end-if
+           end-if
+           .
+       5200-Delete-Changes.
+      *****************************************************************
+      * Delete the record
+      *****************************************************************
+           if Validation-Errors greater than spaces
+               move Validation-Errors to MSGO
+           else
+               EXEC SQL
+                  DELETE FROM CONTACTS
+                  WHERE EMAIL_ADDR = :CP-EMAIL-ADDR
+                    AND SURNAME    = :CP-SURNAME
+               END-EXEC
+               if SQLCODE = 0
+                   EXEC SQL COMMIT END-EXEC
+                   move MSG-Record-Deleted to MSGO
+               else
+                   EXEC SQL ROLLBACK END-EXEC
+                   move "ADD" to ERR-Operation
                    perform 8200-SQL-Error
                end-if
            end-if
@@ -362,15 +438,24 @@
            set Highlight-Error to true
            perform 9100-Display-and-Return
            .
+       9100-Display-and-Return.
       *****************************************************************
       * Display the output map and do a pseudoconversational return.
       *****************************************************************
-       9100-Display-and-Return.
            perform 1300-Set-Map
            move "UPDATE" to SCRTITLO
-           move DFHBMASK to EMAILA
+           if not Add-Key
+               move DFHBMASK to EMAILA
+           end-if
            move DFHBMASK to LCONTA
            move DFHBMASK to LRESPA
+           if Delete-Key
+               move DFHBMASK to FNAMEA
+               move DFHBMASK to MNAMEA
+               move DFHBMASK to SNAMEA
+               move DFHBMASK to ANAMEA
+               move DFHBMASK to LANGA
+           end-if
            if Highlight-Error
                move DFHRED to MSGC
                move space to Highlight-Control
@@ -388,6 +473,9 @@
            END-EXEC
            .
        9500-Transfer-to-View.
+      *****************************************************************
+      * Transfer back to the view screen terminate the update program
+      *****************************************************************
            EXEC CICS START
                TRANSID(CP-View-TransId)
                TERMID(EIBTRMID)
