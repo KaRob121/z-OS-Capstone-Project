@@ -122,6 +122,9 @@
            end-if
            .
 
+      ******************************************************************
+      * Reformat Feed-1 record to Common Record
+      ******************************************************************
        1300-Reformat.
            move zero to Tally-Field
            move spaces to Common-record
@@ -153,6 +156,9 @@
            display Common-Record
            .
 
+      ******************************************************************
+      * Ensure email is valid by checking for @ and . after @
+      ******************************************************************
        1310-Validate-Email.
            move zero to Tally-Field
            inspect F1-Email-Address
@@ -201,6 +207,9 @@
            end-if
            .
 
+      ******************************************************************
+      * Reformat Feed-2 record to Common Record
+      ******************************************************************
        2300-Reformat.
            move spaces to Common-record
            perform 2310-Validate-Email
@@ -278,6 +287,9 @@
            end-if
            .
 
+      ******************************************************************
+      * Reformat Feed-3 record to Common Record
+      ******************************************************************
        3300-Reformat.
            move spaces to Common-record
            if F3-Middle-Name = "STOP"
@@ -337,6 +349,9 @@
            end-if
            .
 
+      ******************************************************************
+      * Write errors to Error-File and Common records to Common-File
+      ******************************************************************
        4000-Write.
            if Record-Error
                open extend Error-File

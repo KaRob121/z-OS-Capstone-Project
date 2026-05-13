@@ -169,12 +169,8 @@
                move "Dates formatted in (YYYY/MM/DD)" to DFORMTO
                move "    Last Contact: " to LCONTTO
                move "   Last Response: " to LRESPTO
-               string
-                    "ENTER Validate  PF4 ADD  PF5 Save  PF6 Delete"
-                    delimited by size
-                    "  PF12 Cancel" delimited by size
-                    into INFOTO
-               end-string
+               move "ENTER Validate     PF5 Save     PF12 Cancel"
+                 to INFOTO
            else
                move "Detalles de Contacto" to CDEETO
                move "   Primer Nombre: " to FNAMETO
@@ -187,12 +183,8 @@
                move "Fechas en formato (AAAA/MM/DD)" to DFORMTO
                move " Ultimo Contacto: " to LCONTTO
                move "Ultima Respuesta: " to LRESPTO
-               string
-                    "ENTER Validar  PF4 Agregar  PF5 Guardar  PF6 Borra"
-                    delimited by size
-                    "r  PF12 Cancelar" delimited by size
-                    into INFOTO
-               end-string
+               move "ENTER Validar     PF5 Guardar     PF12 Cancelar"
+                 to INFOTO
            end-if
            .
        2000-Validate-Input.
@@ -443,7 +435,14 @@
       * Display the output map and do a pseudoconversational return.
       *****************************************************************
            perform 1300-Set-Map
-           move "UPDATE" to SCRTITLO
+           evaluate true
+               when Add-Key
+                   move "ADD" to SCRTITLO
+               when Update-Key
+                   move "UPDATE" to SCRTITLO
+               when other
+                   move "DELETE" to SCRTITLO
+           end-evaluate
            if not Add-Key
                move DFHBMASK to EMAILA
            end-if

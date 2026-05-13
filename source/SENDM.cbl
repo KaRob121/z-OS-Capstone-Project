@@ -57,23 +57,22 @@
            perform 0000-Get-Current-Date
            perform 1600-Open-Sent-File
            perform 1000-Read-Send
-           perform 1100-Close-Send-File
            perform 1610-Close-Sent-File
            goback
            .
 
        0000-Get-Current-Date.
-       *****************************************************************
-       * Get today's date and format it for the DB2 LAST_CONTACT column.
-       *****************************************************************
+      *****************************************************************
+      * Get today's date and format it for the DB2 LAST_CONTACT column.
+      *****************************************************************
            move function current-date(1:8) to WS-Current-Date
            move corr WS-Current-Date to WS-Current-Date-Formated
            .
 
        1000-Read-Send.
-       *****************************************************************
-       * Read each selected contact, send the message, and update history.
-       *****************************************************************
+      *****************************************************************
+      * Read each selected contact, send the message, and update history
+      *****************************************************************
            perform 1100-Open-Send-File
            perform 1200-Read-Next
            perform until EOF of Send-File-Status
@@ -81,12 +80,13 @@
                perform 1300-Update-Contacts
                perform 1200-Read-Next
            end-perform
+           perform 1110-Close-Send-File
            .
 
        1100-Open-Send-File.
-       *****************************************************************
-       * Open SEFILE as input to read contacts selected for messaging.
-       *****************************************************************
+      *****************************************************************
+      * Open SEFILE as input to read contacts selected for messaging.
+      *****************************************************************
            open input Send-File
            if not OK of Send-File-Status
                display 'Did not open file: '
@@ -95,19 +95,19 @@
            .
 
        1110-Close-Send-File.
-       *****************************************************************
-       * Close SEFILE after all selected contacts are processed.
-       *****************************************************************
-       close Send-File
-       if not OK of Send-File-Status
-           display "Error closing SEFILE " Send-File-Status
-       end-if
-       .
+      *****************************************************************
+      * Close SEFILE after all selected contacts are processed.
+      *****************************************************************
+           close Send-File
+           if not OK of Send-File-Status
+               display "Error closing SEFILE " Send-File-Status
+           end-if
+           .
 
        1200-Read-Next.
-       *****************************************************************
-       * Read the next selected contact from SEFILE.
-       *****************************************************************
+      *****************************************************************
+      * Read the next selected contact from SEFILE.
+      *****************************************************************
            read Send-File next into Send-Record end-read
            if not EOF of Send-File-Status
                if not OK of Send-File-Status
@@ -118,9 +118,9 @@
            .
 
        1300-Update-Contacts.
-       *****************************************************************
-       * Update CONTACTS with today's LAST_CONTACT date after send attempt.
-       *****************************************************************
+      *****************************************************************
+      * Update CONTACTS with today's date after send attempt.
+      *****************************************************************
            perform 1400-Set-Host-Variables
            EXEC SQL
                 UPDATE CONTACTS
@@ -136,9 +136,9 @@
            .
 
        1400-Set-Host-Variables.
-       *****************************************************************
-       * Build DB2 host variables from the selected contact record.
-       *****************************************************************
+      *****************************************************************
+      * Build DB2 host variables from the selected contact record.
+      *****************************************************************
            move WS-Current-Date-Formated to LAST-CONTACT
            move 0 to LAST-CONTACT-IND
            move function trim(WS-Email-Addr leading) to EMAIL-ADDR-TEXT
@@ -152,33 +152,34 @@
            .
 
        1500-Write-Record.
-       *****************************************************************
-       * Write successfully processed contact to the sent history file.
-       *****************************************************************
+      *****************************************************************
+      * Write successfully processed contact to the sent history file.
+      *****************************************************************
            move EMAIL-ADDR-TEXT to ST-Email-Addr
            move SURNAME-TEXT to ST-Surname
            write FC-Sent-Record
            if not OK of Sent-File-Status
-               display "Error writing to STFILE " Sent-File-Status
+               display "Error writing to SEFILE " Sent-File-Status
            end-if
            .
 
        1600-Open-Sent-File.
-       *****************************************************************
-       * Open STFILE for sent contact history.
-       *****************************************************************
+      *****************************************************************
+      * Open STFILE for sent contact history.
+      *****************************************************************
            open extend Sent-File
            if not OK of Sent-File-Status
-               display "Error opening STFILE " Sent-File-Status
+               display "Error opening SEFILE " Sent-File-Status
            end-if
            .
 
        1610-Close-Sent-File.
-       *****************************************************************
-       * Close STFILE after sent-history records are written.
-       *****************************************************************
-       close Sent-File
-       if not OK of Sent-File-Status
-           display "Error closing STFILE " Sent-File-Status
-       end-if
-       .
+      *****************************************************************
+      * Open STFILE for sent contact history.
+      *****************************************************************
+           close Sent-File
+           if not OK of Sent-File-Status
+               display "Error closing SEFILE " Sent-File-Status
+           end-if
+           .
+
