@@ -51,6 +51,8 @@
       ******************************************************************
            perform 2100-Validate-Email
            perform 2200-Validate-Names
+           perform 2300-Check-DNC
+           perform 2400-Check-Language-Code
            .
 
        2100-Validate-Email.
@@ -79,32 +81,20 @@
       ******************************************************************
       * Ensure required name fields are not empty
       ******************************************************************
+           move spaces to Missing-Field-Names
            if CP-EMAIL-ADDR-TEXT not greater than spaces
-               move "Email:Address" to Missing-Field-Names
-               move "," to Delimiter-Value
+               move "Email Address" to Missing-Field-Names
            end-if
            if CP-SURNAME-TEXT not greater than spaces
-               string
-                       Missing-Field-Names delimited by space
-                       Delimiter-Value delimited by size
-                       space delimited by size
-                       "Surname" delimited by size
-                   into Missing-Field-Names
-               end-string
+               move "Surname" to Missing-Field-Names
            end-if
            if CP-FIRST-NAME-TEXT not greater than spaces
-               string
-                       Missing-Field-Names delimited by space
-                       Delimiter-Value delimited by size
-                       space delimited by size
-                       "First:Name" delimited by size
-                   into Missing-Field-Names
-               end-string
+               move "First Name" to Missing-Field-Names
            end-if
-
+           if CP-LANG not greater than spaces
+               move "Language Code" to Missing-Field-Names
+           end-if
            if Missing-Field-Names greater than spaces
-               inspect Missing-Field-Names
-                   replacing all ":" by space
                move Error-Message-Work-Area to Validation-Errors
            end-if
            .
