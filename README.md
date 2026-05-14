@@ -238,11 +238,11 @@ Run `<userid>.CAP.SOURCE(SENDMC)` to call subprogram `<userid>.CAP.SOURCE(MAILSN
 
 If your bootcamp curriculum included CICS application development, then develop a BMS mapset and COBOL program to browse the system of record back end data store (either VSAM KSDS or DB2) and display the records.
 
-Compile `<userid>.CAP.SOURCE(CAPVIEW)` with `<userid>.CAP.JOBLIB(DB2CICS)` and bind it with `<userid>.CAP.JOBLIB(DB2B)`, binding program `CAPVIEW` with plan `MATEGDA'.
-Compile the mapset `<userid>.CAP.MAPLIB(CAPVMSD)`. 
+Compile `<userid>.CAP.SOURCE(CAPVIEW)` with `<userid>.CAP.JOBLIB(DB2CICS)` and bind it with `<userid>.CAP.JOBLIB(DB2B)`, binding program `CAPVIEW` with plan `MATEGDA`.
+Compile the mapset `<userid>.CAP.MAPLIB(CAPVMSD)`.
 Define and install `<userid>.CAP.SOURCE(CAPVIEW)`and`<userid>.CAP.MAPLIB(CAPVMSD)`.
 Define and install transaction `MGD1`with reference to`<userid>.CAP.SOURCE(CAPVIEW)`.
-Define and install DB2entry `MGDENT1`and DB2tran`MGDTRN1`, linking the two. Make sure to connet `MGDENT1`with plan`MATEGDA`and`MGDTRN1`with transaction`MGD1`. 
+Define and install DB2entry `MGDENT1`and DB2tran`MGDTRN1`, linking the two. Make sure to connet `MGDENT1`with plan`MATEGDA`and`MGDTRN1`with transaction`MGD1`.
 Set programs `CAPVIEW`and`CAPVMSD`.
 Run transaction `MGD1` to display the records in the table.
 
